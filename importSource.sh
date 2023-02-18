@@ -1,4 +1,4 @@
-search-f#!/bin/bash
+#!/bin/bash
 ###########################################
 ##############    PLUMBING   ##############
 ## Error tracking
@@ -10,8 +10,6 @@ failure() {
     echo "Failed at $lineno: $msg"
 }
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
-## Dependencies
-export FREESURFER_HOME=/usr/local/freesurfer/stable7.1.1; source $FREESURFER_HOME/SetUpFreeSurfer.sh
 ###########################################
 ###########################################
 
@@ -28,13 +26,13 @@ main() {
     skipPromptFlag=$7
 
     ## Store findsession output and set some dir
-    # rm -f $projDir/code/importSource__sub-${sub}_ses-${ses}.info
-    findsession -o $DATE -f $BAY $SUBJECT | tail -7 > $projDir/importSource__sub-${sub}_ses-${ses}.info
+    # rm -f $projDir/code/sub-${sub}_ses-${ses}.info
+    findsession -o $DATE -f $BAY $SUBJECT | tail -7 > $projDir/sub-${sub}_ses-${ses}.info
 
     ## Set some directories
-    dcmDir_source=$(cat $projDir/importSource__sub-${sub}_ses-${ses}.info | grep PATH | awk -F: '{print $2}' | awk '{$1=$1};1')
-    dcmDir=$projDir/source/sub-$sub/ses-$ses/mri/dcm; mkdir -p $dcmDir
-    niiDir=$projDir/source/sub-$sub/ses-$ses/mri/nii;
+    dcmDir_source=$(cat $projDir/sub-${sub}_ses-${ses}.info | grep PATH | awk -F: '{print $2}' | awk '{$1=$1};1')
+    dcmDir=$projDir/sub-$sub/ses-$ses/mri/dcm; mkdir -p $dcmDir
+    niiDir=$projDir/sub-$sub/ses-$ses/mri/nii;
 
     ## Confirm everything is ok
     if [ ! $skipPromptFlag ]; then
@@ -42,7 +40,7 @@ main() {
 	    echo =======; echo  bids name: sub-${sub}_ses-$ses; echo $projDir; \
 	    echo =======; echo dcm source: $dcmDir_source; stat -c "User:%U Group:%G" $dcmDir_source; echo "$(ls $dcmDir_source | wc -l) files"; \
 	    echo =======; echo findsession output:; \
-	    cat $projDir/importSource__sub-${sub}_ses-${ses}.info; \
+	    cat $projDir/sub-${sub}_ses-${ses}.info; \
 	    echo =======; \
 	    if [ -f $dcmDir/../dcmunpack.index ]; then echo dcmunpack.index exists, will use it; fi; \
 	    printf '\U2191%.0s' {1..7}; printf '%s\n'
@@ -50,7 +48,7 @@ main() {
 		read -p "Does the above looks good? (y or n)" yn
 		case $yn in
 		    [Yy]* ) break;;
-		    [Nn]* ) rm $projDir/code/importSource__sub-${sub}_ses-${ses}.info; exit;;
+		    [Nn]* ) rm $projDir/code/sub-${sub}_ses-${ses}.info; exit;;
 		    * ) echo "Please answer yes (y or Y) or no (n or N).";;
 		esac
 	    done
