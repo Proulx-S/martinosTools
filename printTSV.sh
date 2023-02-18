@@ -2,8 +2,10 @@
 niiDir=$1
 filt=$2
 
-tmp=$(mktemp)
+## Add table header
+tmp1=$(mktemp)
 paste <(echo -e fileId\\n------) \
+      <(echo -e nVol\\n----) \
       <(echo -e TR\\n--) \
       <(echo -e TE\\n--) \
       <(echo -e FA\\n--) \
@@ -13,27 +15,42 @@ paste <(echo -e fileId\\n------) \
       <(echo -e space\\n-----) \
       <(echo -e seqName\\n-------) \
       <(echo -e serDesc\\n-------) \
-      > $tmp
+      > $tmp1
+
+## Extract number of frames from .nii.gz file
+tmp2=$(mktemp)
+tmp3=$(mktemp)
+for curJson in $niiDir/*.json
+do
+    mri_info --o $tmp2 --nframes ${curJson%.*}.nii.gz > /dev/null
+    cat $tmp2 >> $tmp3
+done
+rm $tmp2
+
+## Add table content
 paste <(basename -a $niiDir/*.json | awk -F___ '{print $1}') \
+      <(cat $tmp3) \
       <(jq '.RepetitionTime' $niiDir/*.json) \
       <(jq '.EchoTime' $niiDir/*.json) \
       <(jq '.FlipAngle' $niiDir/*.json) \
-      <(jq '.PixelSpacing' $niiDir/*.json) \
+      <(jq '.PixelSpacing | split("/") | .[]|=tonumber | .[]|=.*1000 | .[]|=round | .[]|=./1000 | join("/")' $niiDir/*.json) \
       <(jq '.NumberOfSlices' $niiDir/*.json) \
       <(jq '.SliceThickness' $niiDir/*.json) \
       <(jq '.SpacingBetweenSlices' $niiDir/*.json) \
       <(jq '.SequenceName' $niiDir/*.json) \
       <(jq '.SeriesDescription' $niiDir/*.json) \
-      >> $tmp
+      >> $tmp1
+rm $tmp3
 
+## Print table, filtering it if requested
 if [ -z "$filt" ]; then
-    column -ts $'\t' $tmp
-    rm $tmp
+    column -ts $'\t' $tmp1
+    rm $tmp1
 else
-    tmp2=$(mktemp)
-    head -2 $tmp > $tmp2
-    grep $filt $tmp >> $tmp2
-    column -ts $'\t' $tmp2
-    rm $tmp $tmp2
+    tmp4=$(mktemp)
+    head -2 $tmp1 > $tmp4
+    grep $filt $tmp1 >> $tmp4
+    column -ts $'\t' $tmp4
+    rm $tmp1 $tmp4
 fi
 
