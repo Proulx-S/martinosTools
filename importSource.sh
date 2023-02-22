@@ -72,7 +72,8 @@ main() {
 		  -index-out $dcmDir/../dcmunpack.index \
 		  -log $dcmDir/../dcmunpack.log
     fi
-    mv -f $dcmDir/*.dat $dcmDir/..
+    mv -f $dcmDir/log/*.dat $dcmDir/..
+    rm -r $dcmDir/log
 
     ## With dcm2nii, convert to nii
     rm -rf $niiDir; mkdir -p $niiDir
