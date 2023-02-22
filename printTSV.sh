@@ -45,7 +45,15 @@ rm $tmp3
 ## Print table, filtering it if requested
 if [ -z "$filt" ]; then
     column -ts $'\t' $tmp1
-    rm $tmp1
+    mv $tmp1 $niiDir/../nii.tsv
+    printf '%s\n'; printf '\U2193%.0s' {1..7}; printf '%s\n'; \
+	echo "1) Open nii.tsv"
+	echo libreoffice --calc $niiDir/../nii.tsv
+	echo "2) Add one column to the left"
+	echo "3) Insert BIDS filenames"
+	echo "4) Save as nii2bids.tsv in your bids code folder"
+	    printf '\U2191%.0s' {1..7}; printf '%s\n'
+	
 else
     tmp4=$(mktemp)
     head -2 $tmp1 > $tmp4
