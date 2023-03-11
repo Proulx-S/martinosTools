@@ -3,6 +3,7 @@ function M = getMaskOutline(mask,precisionFactor)
 % later ploting over another image ( plot(M) ).
 % Higher precisionFactor alleviates the round corners problem but is
 % computationally more intense (requires image resizing)
+warning('off','MATLAB:polyshape:repairedBySimplify')
 
 %% Resize mask
 if ~exist('precisionFactor','var')
@@ -13,7 +14,7 @@ yRs = ( (1:(size(mask,2)*precisionFactor)) - 0.5 ) / precisionFactor;
 mask = imresize(mask,precisionFactor,'nearest');
 
 %% Compute contours
-Mtmp = contourc(yRs,xRs,mask,[0.5 0.5]);
+Mtmp = contourc(yRs,xRs,double(mask),[0.5 0.5]);
 M = polyshape(Mtmp(:,2:1+Mtmp(2,1))' + [0.5 0.5]); Mtmp(:,1:1+Mtmp(2,1)) = [];
 while ~isempty(Mtmp)
     M = xor(M,polyshape(Mtmp(:,2:1+Mtmp(2,1))' + [0.5 0.5])); Mtmp(:,1:1+Mtmp(2,1)) = [];
