@@ -7,23 +7,25 @@ function mri = vol2vec(mri,mask)
 % This saves memory while keeping data in a compatible format.
 % Mask is mandatory for vol2vec.m as there is little point in vectorizing
 % the complete 4D data.
+mri = setNiceFieldOrder(mri,{'vol' 'vol2vec' 'vec'});
 
+%% Set mask to vol2vec
 if exist('mask','var') && ~isempty(mask) && ~isempty(mri.vol)
     if isfield(mri,'vol2vec')
         error('mask already exists')
     end
     mri.vol2vec = logical(mask);
-    mri.vec = [];
-    curNames = fieldnames(mri);
-    curInd = find(ismember(curNames,{'vol' 'vol2vec' 'vec'}));
-    tmpNames1 = curNames(1:(curInd(1)-1));
-    tmpNames2 = curNames((curInd(1)):end); tmpNames2(ismember(tmpNames2,{'vol' 'vol2vec' 'vec'})) = [];
-    newNames = [tmpNames1; {'vol' 'vol2vec' 'vec'}'; tmpNames2];
-    [~,Locb] = ismember(newNames,curNames);
-    mri = orderfields(mri,Locb);
+    mri.vol2vecFlag = 'customMask';
+else
+    % if mask not specified, use all ones except voxels where the
+    % timeseries is all zeros (edge voxels)
+    sz = size(mri.vol);
+    mri.vol2vec = true(sz(1:3)) & ~all(mri.vol==0,4);
+    mri.vol2vecFlag = 'allInclusiveMask';
 end
-
+%% Vectorize according to vol2vec
 mri.vol = permute(mri.vol,[4 1 2 3]);
 mri.vec = mri.vol(:,mri.vol2vec);
 mri.vol = [];
+
 
