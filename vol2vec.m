@@ -7,6 +7,10 @@ function mri = vol2vec(mri,mask)
 % This saves memory while keeping data in a compatible format.
 % Mask is mandatory for vol2vec.m as there is little point in vectorizing
 % the complete 4D data.
+if isempty(mri.vol) && ~isempty(mri.vec)
+    % already in vector format, don't do anything
+    return
+end
 mri = setNiceFieldOrder(mri,{'vol' 'vol2vec' 'vec'});
 
 %% Set mask to vol2vec

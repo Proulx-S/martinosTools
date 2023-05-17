@@ -7,6 +7,10 @@ function mri = vec2vol(mri)
 % This saves memory while keeping data in a compatible format.
 % Mask is mandatory for vol2vec.m as there is little point in vectorizing
 % the complete 4D data.
+if isempty(mri.vec) && ~isempty(mri.vol)
+    % already in volume format
+    return
+end
 
 mri.vol = nan(mri.nframes,mri.height,mri.width,mri.depth);
 mri.vol(:,mri.vol2vec) = mri.vec;
