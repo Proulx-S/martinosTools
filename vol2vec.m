@@ -1,4 +1,4 @@
-function mri = vol2vec(mri,mask)
+function mri = vol2vec(mri,mask,forceFlag)
 % vol2vec.m and vec2vol.m
 % To be used with MRIread.m and MRIwrite.m from Freesurfer
 % (/usr/local/freesurfer/dev/matlab/).
@@ -7,6 +7,9 @@ function mri = vol2vec(mri,mask)
 % This saves memory while keeping data in a compatible format.
 % Mask is mandatory for vol2vec.m as there is little point in vectorizing
 % the complete 4D data.
+if ~exist('forceFlag','var')
+    forceFlag = false;
+end
 if isempty(mri.vol) && ~isempty(mri.vec)
     % already in vector format, don't do anything
     return
@@ -15,7 +18,7 @@ mri = setNiceFieldOrder(mri,{'vol' 'vol2vec' 'vec'});
 
 %% Set mask to vol2vec
 if exist('mask','var') && ~isempty(mask) && ~isempty(mri.vol)
-    if isfield(mri,'vol2vec')
+    if ~forceFlag && isfield(mri,'vol2vec')
         error('mask already exists')
     end
     mri.vol2vec = logical(mask);
