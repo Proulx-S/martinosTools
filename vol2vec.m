@@ -14,11 +14,10 @@ if isempty(mri.vol) && ~isempty(mri.vec)
     % already in vector format, don't do anything
     return
 end
-mri = setNiceFieldOrder(mri,{'vol' 'vol2vec' 'vec'});
 
 %% Set mask to vol2vec
 if exist('mask','var') && ~isempty(mask) && ~isempty(mri.vol)
-    if ~forceFlag && isfield(mri,'vol2vec')
+    if ~forceFlag && isfield(mri,'vol2vec') && ~iempty(mri.vol2vec)
         error('mask already exists')
     end
     mri.vol2vec = logical(mask);
@@ -34,5 +33,8 @@ end
 mri.vol = permute(mri.vol,[4 1 2 3]);
 mri.vec = mri.vol(:,mri.vol2vec);
 mri.vol = [];
+
+mri = setNiceFieldOrder(mri,{'vol' 'vol2vec' 'vec'});
+
 
 
