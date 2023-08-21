@@ -17,7 +17,7 @@ end
 
 %% Set mask to vol2vec
 if exist('mask','var') && ~isempty(mask) && ~isempty(mri.vol)
-    if ~forceFlag && isfield(mri,'vol2vec') && ~iempty(mri.vol2vec)
+    if ~forceFlag && isfield(mri,'vol2vec') && ~isempty(mri.vol2vec)
         error('mask already exists')
     end
     mri.vol2vec = logical(mask);
