@@ -1,4 +1,4 @@
-function [data,dataTime,dataTrigTimes,dataChan,dataRun] = extractLabChartData(physioFile,mriFile,segmentInd)
+function [data,dataTime,sampleRate,tr,dataTrigTimes,dataChan,dataRun] = extractLabChartData(physioFile,mriFile,figFlag,segmentInd)
 % Automatically extract cardiac, respiration and scanner triggers from
 % LabChart data in matlab format, sorting out runs at the same time. The
 % data type corresponding to each channel is automatically identified based
@@ -13,6 +13,9 @@ function [data,dataTime,dataTrigTimes,dataChan,dataRun] = extractLabChartData(ph
 if ~exist('segmentInd','var')
     segmentInd = [];
 end
+if ~exist('figFlag','var') || isempty(figFlag)
+    figFlag = 1;
+end
 %% Load physio
 physio = load(physioFile);
 %% Load MRI info
@@ -21,7 +24,7 @@ tr = mri.tr/1000;
 nframes = mri.nframes;
 runDur = tr*nframes;
 %% Identify segment
-figure('WindowStyle','docked');
+if figFlag>1; figure('WindowStyle','docked'); end
 startTime = nan(size(physio.datastart,2),size(physio.datastart,1));
 endTime = nan(size(physio.datastart,2),size(physio.datastart,1));
 for chanInd = 1:size(physio.datastart,1)
@@ -30,10 +33,10 @@ for chanInd = 1:size(physio.datastart,1)
         Fs = physio.samplerate(chanInd,segmentIndTmp);
         if segmentIndTmp==1
             t = 0:1/Fs:length(data)/Fs-1/Fs;
-            hPlotTmp(chanInd) = plot(t,data); hold on
+            if figFlag>1; hPlotTmp(chanInd) = plot(t,data); hold on; end
         else
             t = tLast + 1/Fs + (0:1/Fs:length(data)/Fs-1/Fs);
-            plot(t,data,'Color',hPlotTmp(chanInd).Color);
+            if figFlag>1; plot(t,data,'Color',hPlotTmp(chanInd).Color); end
         end
         tLast = t(end);
         startTime(segmentIndTmp,chanInd) = t(1);
@@ -41,24 +44,28 @@ for chanInd = 1:size(physio.datastart,1)
     end
 end
 x = [startTime(:,1); endTime(end,1)];
-plot(repmat(x',[2 1]),repmat(ylim',[1 length(x)]),'k','LineWidth',2);
-yLim = ylim;
-text(startTime(:,1),repmat(yLim(1),[length(startTime(:,1)) 1]),replace(fullfile('Segment',cellstr(num2str((1:size(physio.datastart,2))'))),filesep,' '),'Rotation',90,'VerticalAlignment','top','FontSize',20)
-xlabel('time (sec)')
-title('Select the appropriate segment')
+if figFlag>1
+    plot(repmat(x',[2 1]),repmat(ylim',[1 length(x)]),'k','LineWidth',2);
+    yLim = ylim;
+    text(startTime(:,1),repmat(yLim(1),[length(startTime(:,1)) 1]),replace(fullfile('Segment',cellstr(num2str((1:size(physio.datastart,2))'))),filesep,' '),'Rotation',90,'VerticalAlignment','top','FontSize',20)
+    xlabel('time (sec)')
+    title('Select the appropriate segment')
+end
 %%% If unspecified, choose the longest segment
 if isempty(segmentInd)
     [~,segmentInd] = max(endTime(:,1) - startTime(:,1));
 end
-x = [startTime(segmentInd,1) endTime(segmentInd,1)];
-x = x([1 2 2 1 1]);
-y = ylim;
-y = y([1 1 2 2 1]);
-hPatch = patch(x,y,'k');
-uistack(hPatch,'bottom')
-set(hPatch,'FaceColor',[1 1 1].*0.9,'EdgeColor','none')
+if figFlag>1
+    x = [startTime(segmentInd,1) endTime(segmentInd,1)];
+    x = x([1 2 2 1 1]);
+    y = ylim;
+    y = y([1 1 2 2 1]);
+    hPatch = patch(x,y,'k');
+    uistack(hPatch,'bottom')
+    set(hPatch,'FaceColor',[1 1 1].*0.9,'EdgeColor','none')
 
-legend([hPlotTmp hPatch],[replace(fullfile('Channel',cellstr(num2str((1:size(physio.datastart,1))'))),filesep,' '); {'selected segment'}])
+    legend([hPlotTmp hPatch],[replace(fullfile('Channel',cellstr(num2str((1:size(physio.datastart,1))'))),filesep,' '); {'selected segment'}])
+end
 
 %% Identify channels
 if isempty(segmentInd)
@@ -185,3 +192,4 @@ for chanInd = 1:length(physio.titles1)
         dataRun(runInd) = runInd;
     end
 end
+sampleRate = physio.samplerate(:,segmentInd)';
